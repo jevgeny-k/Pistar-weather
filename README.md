@@ -51,3 +51,9 @@ See [VALIDATION.md](VALIDATION.md). Repository and package preparation do not ch
 ## Private settings
 
 No operator ID is embedded in public code. Before deployment, supply `/etc/pistar-weather/site.json` using `config/site.example.json` as a template. A missing ID blocks transmission. For local execution, explicitly set `PISTAR_SITE_CONFIG` to the private file. Never commit or bundle this file. Public Riga city-center defaults and Russian speech are demonstration content, not a private operator address. See [PRIVACY.md](PRIVACY.md).
+
+## November 8 reliability changes
+
+Current `main` adds corrected 60 ms relay pacing, bounded retries for transient HTTP failures, and explicitly announced replay of the last successful bulletin from a single RAM cache. See [fallback behavior](outputs/pi-only-preparation/FALLBACK.md), [radio investigation](outputs/pi-only-preparation/radio-investigation-20261108.md), and [validation](VALIDATION.md). Intermittent silent RF transmission remains under investigation.
+
+These changes postdate the original v0.1.0 release asset. To include them, use current source plus the phrase-bank/encoder assets from that release and rebuild with `tools/build_transfer.py`; the builder includes both fallback-notice assets. The existing release ZIP has not been replaced by this source update.
