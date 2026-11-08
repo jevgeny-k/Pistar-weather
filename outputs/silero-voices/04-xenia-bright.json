@@ -1,0 +1,8 @@
+{
+  "speaker": "xenia",
+  "rate": 1.08,
+  "pitch": 1.04,
+  "ssml": "<speak><prosody rate=\"fast\" pitch=\"high\">Добрый вечер!<break time=\"150ms\"/>Это прогноз погоды для Риги.<break time=\"120ms\"/>Надеюсь, теперь меня слышно хорошо!<break time=\"120ms\"/>Желаю вам приятного вечера!</prosody></speak>",
+  "seconds": 6.1625,
+  "sha256": "4ffde8d4abe977e9e9250124757f7a21d9a56fa400f355f79e3b353da6cbe852"
+}

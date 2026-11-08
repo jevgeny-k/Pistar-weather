@@ -1,0 +1,15 @@
+# Voice weather service history
+
+Configured November 7, 2026 for OPERATOR_CALLSIGN. Initial weather came from Open-Meteo for Riga, Europe/Riga. The Pi used local Piper `ru_RU-irina-medium`, encoded to AMBE+2. Speech omitted the callsign and closing phrase and used a 100-3400 Hz passband with headroom. Local private source/destination ID: <OWNER_DMR_ID>, TS1, CC1.
+
+A transparent relay forwards normal MMDVMHost/BrandMeister traffic. Weather packets go only to local MMDVMHost. The relay waits for an idle TS1 and yields to normal TS1 traffic. Later slot-isolation fixes allow TS2 activity independently.
+
+Initial commands were `pistar-weather status`, `pistar-weather prepare`, and `pistar-weather now`. Program path: `/opt/pistar-weather`; RAM working directory: `/run/pistar-weather`; relay unit: `pistar-weather-relay.service`. Initial configuration changes only redirected DMR Network RemoteAddress/RemotePort; credentials, frequencies, modem settings, and Wi-Fi were preserved. Initial private backups live under `/var/backups/pistar-weather/`. Earlier eSpeak and Denis variants remained in that private backup directory.
+
+An initial on-air test at 19:58 reported a 14.5-second call with 0% loss and BER 0.0%. Such logs confirm processing, not audible reception. Three Silero comparison clips (Baya, Kseniya, Xenia) were sent at 20:49-20:50, with seven-second gaps and recorded call lengths of 10.6/10.6/9.8 seconds. Checksums and decoded AMBE levels were checked.
+
+The user selected Silero Xenia, +15% pitch and +8% rate, with short pauses. Profile: `work/silero/selected_voice.json`. Laptop generator: `work/pistar-weather/weather_bulletin.py`. It creates separate current-weather, forecast, and space-weather audio, covering current/apparent temperature, wind/gusts, humidity, pressure, next-six-hour precipitation, tomorrow's temperatures/sunrise, observed geomagnetic conditions, twelve-hour forecast, and short-term aurora/cloud information. Kp is not converted into a numerical probability of seeing an aurora.
+
+Stale weather blocks publication. Missing fresh NOAA data is announced explicitly. Playback validates age (30 minutes maximum), voice profile, WAV SHA-256, decoded AMBE levels, and private-call duration. All parts are prepared before transmission starts. The later autonomous version uses a complete prerecorded phrase bank instead of live neural synthesis; see the current handoff and status notes.
+
+Recorded upstream references: [Open-Meteo](https://open-meteo.com/en/docs), [NOAA scales](https://services.swpc.noaa.gov/products/noaa-scales.json), [observed Kp](https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json), [Kp forecast](https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json), [aurora model](https://services.swpc.noaa.gov/json/ovation_aurora_latest.json), [Piper](https://github.com/rhasspy/piper), [Irina voice](https://huggingface.co/rhasspy/piper-voices/tree/main/ru/ru_RU/irina/medium), [md380_vocoder](https://github.com/nostar/md380_vocoder), [dmr_utils3](https://github.com/jayz28/dmr_utils3).

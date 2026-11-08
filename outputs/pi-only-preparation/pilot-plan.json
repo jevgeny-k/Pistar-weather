@@ -1,0 +1,18 @@
+{
+  "generated_utc": "2026-11-07T19:35:53.396389+00:00",
+  "kind": "pilot-current-weather-only",
+  "ids": [
+    "pilot_notice",
+    "riga_intro",
+    "hour_21",
+    "minute_35",
+    "condition_3",
+    "temperature_p015",
+    "feels_p008",
+    "wind_direction_7",
+    "wind_speed_4",
+    "wind_gust_8",
+    "humidity_82",
+    "pressure_1024"
+  ]
+}

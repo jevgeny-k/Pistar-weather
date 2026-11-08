@@ -1,0 +1,11 @@
+{
+  "radio_id": null,
+  "upstream_host": "",
+  "upstream_port": 62031,
+  "wifi_ssid": "",
+  "expected_static_groups": null,
+  "expected_mmdvm": {},
+  "latitude": 56.95,
+  "longitude": 24.10,
+  "timezone": "Europe/Riga"
+}

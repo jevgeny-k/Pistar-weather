@@ -1,0 +1,16 @@
+[Unit]
+Description=Repeat frozen private weather bulletin
+Requires=pistar-weather-relay.service
+After=network-online.target pistar-weather-relay.service mmdvmhost.service
+
+[Service]
+Type=oneshot
+User=pi-star
+Group=pi-star
+ExecStart=/usr/bin/python3 /opt/pistar-weather/frozen-replay-v1/replay.py
+TimeoutStartSec=14min
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/run/pistar-weather

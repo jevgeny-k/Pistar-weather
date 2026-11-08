@@ -1,0 +1,25 @@
+{
+  "generated_utc": "2026-11-07T19:56:51.168012+00:00",
+  "clips": [
+    {
+      "file": "part-1.wav",
+      "sha256": "eaf91da5e6e899425836b0932ab753fb9799e7f1c0023e739865736c14ab9d9b",
+      "seconds": 20.091125
+    },
+    {
+      "file": "part-2.wav",
+      "sha256": "e49bad8bc3fba6fd62b65051dc2b732116005c88484b22929342ae471ebf65bb",
+      "seconds": 11.59375
+    },
+    {
+      "file": "part-3.wav",
+      "sha256": "ccab3bfd96856cf1c8403deb7edd2cd2adb1d423b30e993d7856a22e1186cf99",
+      "seconds": 9.712125
+    },
+    {
+      "file": "part-4.wav",
+      "sha256": "e49d95cb7545e232b9b34dd8c0e35029b198b5b76ba663f39e2578fcd8be642a",
+      "seconds": 25.075
+    }
+  ]
+}

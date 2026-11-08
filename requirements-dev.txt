@@ -1,0 +1,2 @@
+# Time-zone database required by zoneinfo on Windows.
+tzdata==2026.6

@@ -1,0 +1,37 @@
+# Python environments and caches
+__pycache__/
+*.py[cod]
+.venv/
+*-venv/
+.pytest_cache/
+torch-cache/
+cache/
+# Local generated assets and distributions (listed in IMPORT-MANIFEST.json)
+dist/
+*.wav
+*.pt
+*.onnx
+*.zip
+*.log
+*.dmr55
+*.ambe
+*.download
+outputs/hotspot-laptop-working-v1/pi/encode
+assets/encode
+# Private operator configuration must never be published.
+config/site.json
+config/*.local.json
+site.json
+site.local.json
+private/
+known_hosts
+*.bundle
+# Credentials and machine-local settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.sock
+.DS_Store
+Thumbs.db

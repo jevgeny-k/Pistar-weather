@@ -1,0 +1,40 @@
+{
+  "generated_utc": "2026-11-07T19:15:36.857257+00:00",
+  "profile": {
+    "engine": "silero",
+    "model": "v5_6_ru",
+    "speaker": "xenia",
+    "rate": 1.08,
+    "pitch": 1.15
+  },
+  "sources": {
+    "weather": "https://api.open-meteo.com/v1/forecast?latitude=56.95&longitude=24.10&timezone=Europe%2FRiga&wind_speed_unit=ms&forecast_days=2&current=temperature_2m%2Crelative_humidity_2m%2Capparent_temperature%2Cis_day%2Cprecipitation%2Cweather_code%2Ccloud_cover%2Cpressure_msl%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m&hourly=temperature_2m%2Cprecipitation_probability%2Cprecipitation%2Cweather_code%2Cvisibility%2Cwind_gusts_10m&daily=temperature_2m_max%2Ctemperature_2m_min%2Cprecipitation_probability_max%2Csunrise%2Csunset",
+    "kp_observed": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+    "kp_forecast": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json",
+    "aurora": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+    "scales": "https://services.swpc.noaa.gov/products/noaa-scales.json"
+  },
+  "clips": [
+    {
+      "name": "01-current",
+      "file": "01-current.wav",
+      "seconds": 17.975,
+      "sha256": "85cecf7651a0a4ff3c1c79012fc8f5a0b17d0750b1223979cea27940e0dbb8f3",
+      "text": "Погода в Риге. Сейчас двадцать один час пятнадцать минут. Пасмурно. Температура плюс семь с половиной градусов. Ощущается как плюс четыре градуса. Ветер северо-западный, четыре метра в секунду, порывы до восьми метров в секунду. Влажность восемьдесят два процента. Давление на уровне моря одна тысяча двадцать четыре гектопаскаля."
+    },
+    {
+      "name": "02-forecast",
+      "file": "02-forecast.wav",
+      "seconds": 17.25,
+      "sha256": "f2441b0624e30d8ae38f4683f9f79cfe0767a31e1d46d8b24df27f0852757f7b",
+      "text": "Ближайшие шесть часов: возможна морось. Почасовая вероятность осадков достигает шестидесяти процентов. Минимальная температура плюс семь градусов, максимальная плюс семь с половиной градусов. Завтра минимум плюс шесть градусов, максимум плюс девять градусов. Восход солнца завтра в семь часов сорок девять минут."
+    },
+    {
+      "name": "03-space",
+      "file": "03-space.wav",
+      "seconds": 24.8,
+      "sha256": "40b108fa13b377521c5f8eb8cec93c5dcaba6ea72018f7d71800b07b3146f2a2",
+      "text": "Космическая погода. По текущей оценке НОАА геомагнитной бури нет. Последний завершённый трёхчасовой индекс ка пэ около трёх. В прогнозе на ближайшие двенадцать часов возможна буря уровня джи один. Это прогноз, а не наблюдаемая сейчас буря. Краткосрочная модель не показывает яркого сияния прямо над Ригой. Сияние на северном горизонте может быть видно и вдали от центра аврорального овала. Однако нынешняя сплошная облачность сильно мешает наблюдению. "
+    }
+  ]
+}

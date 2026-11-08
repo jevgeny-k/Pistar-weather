@@ -1,0 +1,12 @@
+[Unit]
+Description=Fresh weather bulletin every quarter hour
+
+[Timer]
+OnCalendar=*-*-* *:00/15:00
+AccuracySec=1s
+RandomizedDelaySec=0
+Persistent=false
+Unit=pistar-weather-autonomous.service
+
+[Install]
+WantedBy=timers.target

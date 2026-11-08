@@ -1,0 +1,14 @@
+[Unit]
+Description=Check Pi-Star configuration and weather bank after startup
+Wants=network-online.target pistar-weather-relay.service
+After=network-online.target pistar-weather-relay.service mmdvmhost.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/pistar-weather/bootcheck.py
+TimeoutStartSec=180
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/run/pistar-weather

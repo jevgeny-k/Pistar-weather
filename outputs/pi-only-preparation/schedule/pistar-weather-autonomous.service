@@ -1,0 +1,17 @@
+[Unit]
+Description=Fresh Riga weather and space-weather private bulletin
+Wants=network-online.target
+Requires=pistar-weather-relay.service
+After=network-online.target pistar-weather-relay.service mmdvmhost.service
+
+[Service]
+Type=oneshot
+User=pi-star
+Group=pi-star
+ExecStart=/usr/local/bin/pistar-weather-autonomous now
+TimeoutStartSec=14min
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/run/pistar-weather
