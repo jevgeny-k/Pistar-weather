@@ -49,8 +49,11 @@ def build(destination):
     for path in sorted((base / 'schedule').iterdir()):
         if path.suffix in ('.service', '.timer'):
             add(path, 'systemd/' + path.name)
-    for name in ('CODEX-HANDOFF.md', 'AGENTS.md', 'README.md', 'VALIDATION.md', 'PRIVACY.md'):
+    for name in ('CODEX-HANDOFF.md', 'AGENTS.md', 'README.md', 'VALIDATION.md', 'PRIVACY.md', 'THIRD-PARTY.md'):
         add(ROOT / name, name)
+    for path in sorted((ROOT / 'third_party/md380_vocoder').iterdir()):
+        if path.is_file():
+            add(path, 'third_party/md380_vocoder/' + path.name)
     for path in sorted(base.glob('*.md')):
         add(path, 'docs/' + path.name)
 

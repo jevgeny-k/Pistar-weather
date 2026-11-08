@@ -10,4 +10,4 @@ The public weather fixtures, Russian phrase bank, city name, rounded demonstrati
 
 The public configuration has no usable owner ID or upstream master. Packet generation, validation, and relay startup fail until the operator supplies the private settings. Supplying the real ID is required for deployment; keep that deployment context private. Do not put identities back into shared examples, error messages, logs, or reports.
 
-The native encoder and speech model are third-party binaries retained locally. Text and identity scans do not constitute a full third-party binary security audit. Inspect licensing and verify compatible runtime dependencies before deployment.
+The native encoder is included in the release ZIP; the speech model is downloaded separately from its official upstream when regenerating audio. Text and identity scans do not constitute a full third-party binary security audit. See `THIRD-PARTY.md` and verify compatible runtime dependencies before deployment.

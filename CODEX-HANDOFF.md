@@ -8,7 +8,9 @@ This document prepares deployment; it does not claim that the current hotspot ha
 
 ## Files to receive
 
-The preferred transfer is `dist/pistar-weather-transfer.zip` and its adjacent `.sha256` file. They are generated locally and are ignored by Git. The bundle includes current runtime/relay sources, the complete bank, the historical native encoder, systemd units, this handoff, English instructions, and a new `TRANSFER-MANIFEST.json`. It excludes secrets, virtual environments, Torch, old source snapshots, and original historical ZIPs.
+Download [pistar-weather-transfer.zip](https://github.com/jevgeny-k/Pistar-weather/releases/latest/download/pistar-weather-transfer.zip) and its [SHA-256 checksum](https://github.com/jevgeny-k/Pistar-weather/releases/latest/download/pistar-weather-transfer.zip.sha256) from GitHub Releases. The named ZIP includes all 1,604 audio phrases, current runtime/relay sources, the historical native encoder, systemd units, this handoff, English instructions, third-party notices, and `TRANSFER-MANIFEST.json`. GitHub's automatic source archives omit the audio. No secrets, private settings, virtual environments, Torch model, old snapshots, or original historical ZIPs are included.
+
+For autonomous use, the complete release ZIP is sufficient as the application's asset/source package; the Silero model is not needed. Follow the prerequisite and private configuration steps below. The release is not an unattended installer and does not prove compatibility with every Pi architecture or fix the documented RF issue.
 
 If receiving the whole repository instead, keep ignored assets: in particular `outputs/pi-only-preparation/bank/` and `assets/encode`. A Git clone alone does not contain them. Build a new package from repository root:
 
