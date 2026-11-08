@@ -23,7 +23,7 @@ def build(destination):
     add(ROOT / 'assets/encode', 'relay/encode')
     add(ROOT / 'config/site.example.json', 'config/site.example.json')
     add(ROOT / 'work/pistar-weather/site_settings.py', 'autonomous/site_settings.py')
-    for name in ('assemble.py', 'autonomous.py', 'runtime.py', 'play.py', 'readiness.py'):
+    for name in ('assemble.py', 'autonomous.py', 'runtime.py', 'play.py', 'readiness.py', 'retry_http.py'):
         add(ROOT / 'work/pistar-autonomous' / name, 'autonomous/' + name)
     add(ROOT / 'work/pistar-autonomous/bootcheck.py', 'relay/bootcheck.py')
     base = ROOT / 'outputs/pi-only-preparation'

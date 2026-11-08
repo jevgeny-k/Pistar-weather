@@ -12,6 +12,7 @@ import urllib.request
 import wave
 from zoneinfo import ZoneInfo
 from assemble import assemble
+from retry_http import get_json
 from site_settings import load_site
 
 SITE=load_site()
@@ -128,7 +129,7 @@ def fetch(item):
     key,url=item
     try:
         req=urllib.request.Request(url,headers={'User-Agent':'Pi-Star weather/2.0'})
-        with urllib.request.urlopen(req,timeout=25) as response:data=json.load(response)
+        data=get_json(req,label=key)
         return key,data
     except Exception as exc:print('Unavailable:',key,str(exc),flush=True);return key,None
 
