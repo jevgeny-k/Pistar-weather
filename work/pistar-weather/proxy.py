@@ -107,6 +107,13 @@ class Relay:
         now = time.monotonic()
         if self.job and now > self.job['deadline']:
             self.finish(False, 'Timed out waiting for a free channel')
+        job = self.job
+        if job and self.host and self.connected:
+            wake = job['due']
+            if job['index'] == 0:
+                wake = max(wake, self.last_voice + self.idle)
+            # Wake at the audio deadline, even between network events.
+            timeout = min(timeout, max(0.0, wake - now))
         for key, _ in self.sel.select(timeout):
             sock, tag = key.fileobj, key.data
             try:
@@ -134,11 +141,16 @@ class Relay:
         now = time.monotonic()
         job = self.job
         if job and self.host and self.connected and now >= job['due']:
-            if job['index'] == 0 and now-self.last_voice < self.idle: return
+            if job['index'] == 0:
+                if now-self.last_voice < self.idle: return
+                # Anchor the stream once the channel really becomes idle.
+                job['due'] = now
             # Injection has no code path to self.up: never sent to BrandMeister.
             self.down.sendto(job['packets'][job['index']], self.host)
             job['index'] += 1
-            job['due'] = now + 0.060
+            # Keep the stream on its original 60 ms timeline; adding scheduler
+            # lateness to every deadline makes each announcement progressively slow.
+            job['due'] += 0.060
             if job['index'] == len(job['packets']):
                 self.last_voice = now
                 self.finish(True, 'Private call delivered to local MMDVMHost')
