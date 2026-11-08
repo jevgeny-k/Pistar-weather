@@ -101,7 +101,7 @@ Test imports and encode/decode with a bank sample, writing output only into stag
 
 After prerequisites and staging checks pass, stop the fresh and frozen weather timers and any active bulletin service before replacing files. Record their previous states. Avoid restarting MMDVMHost during ordinary radio traffic.
 
-Install a consistent set of the five current autonomous runtime modules, the `site_settings.py` helper, catalog, bank manifest, and full bank into `/opt/pistar-weather/autonomous-v1/`. When updating an existing installation, retain a recoverable previous version and replace the runtime set together while the weather service is stopped. Do not overlay an older ZIP afterward. Install current relay/playback support files and `bootcheck.py` according to the deployment map. Code, bank, and service files should be readable by `pi-star` and not writable by untrusted accounts; the encoder and wrapper must be executable. Do not chown or replace the existing virtual environment recursively.
+Install a consistent set of the current autonomous runtime modules, HTTP retry/cache helpers and both fallback-notice files, the `site_settings.py` helper, catalog, bank manifest, and full bank into `/opt/pistar-weather/autonomous-v1/`. When updating an existing installation, retain a recoverable previous version and replace the runtime set together while the weather service is stopped. Do not overlay an older ZIP afterward. Install current relay/playback support files and `bootcheck.py` according to the deployment map. Code, bank, and service files should be readable by `pi-star` and not writable by untrusted accounts; the encoder and wrapper must be executable. Do not chown or replace the existing virtual environment recursively.
 
 The command wrapper must contain:
 
@@ -122,7 +122,7 @@ Run as the service owner:
 sudo -u pi-star /usr/local/bin/pistar-weather-autonomous prepare
 ```
 
-Confirm fresh Open-Meteo data, correct Riga local time, valid phrase selection, a complete readable bank, and successful assembly. Expired weather must stop generation; absent/stale NOAA data must be announced as unavailable. Never substitute the imported historical bulletin when fresh generation fails. Offline fixtures in `work/bulletin/` are for tests only.
+Confirm fresh Open-Meteo data, correct Riga local time, valid phrase selection, a complete readable bank, and successful assembly. Unavailable or expired weather selects the checked last-bulletin RAM cache with its spoken warning; without a cache, generation stops. Absent/stale NOAA data must be announced as unavailable. Never substitute an imported historical bulletin. See `docs/FALLBACK.md`. Offline fixtures in `work/bulletin/` are for tests only.
 
 From a full repository checkout, run the existing autonomous tests and DMR/relay tests in a Linux environment with their dependencies. The transfer bundle is intentionally a runtime bundle and does not include the development fixtures/tests. In particular, verify both directions of TS2 forwarding and TS1 interruption behavior after any relay adaptation.
 

@@ -18,6 +18,7 @@ from site_settings import load_site
 SITE=load_site()
 TZ=ZoneInfo(SITE.get('timezone', 'Europe/Riga'))
 UTC=dt.timezone.utc
+class WeatherUnavailable(ValueError):pass
 PARAMS=dict(latitude='56.95',longitude='24.10',timezone='Europe/Riga',wind_speed_unit='ms',forecast_days='2',
  current='temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
  hourly='temperature_2m,precipitation_probability,weather_code,visibility',
@@ -56,9 +57,9 @@ def build_plans(data,now,catalog):
         return result if result in entries else 'outside_bank'
     local=now.astimezone(TZ)
     w=data.get('weather')
-    if not w:raise ValueError('Fresh weather unavailable')
+    if not w:raise WeatherUnavailable('Fresh weather unavailable')
     c=w['current'];observed=dt.datetime.fromisoformat(c['time']).replace(tzinfo=TZ)
-    if not -300<=(local-observed).total_seconds()<=5400:raise ValueError('Weather data stale or from future')
+    if not -300<=(local-observed).total_seconds()<=5400:raise WeatherUnavailable('Weather data stale or from future')
     current=['riga_intro','hour_'+str(local.hour),'minute_'+str(local.minute),
              'condition_'+str(int(c['weather_code'])) if 'condition_'+str(int(c['weather_code'])) in entries else 'missing_condition',
              temp('temperature',c['temperature_2m']),temp('feels',c['apparent_temperature']),
@@ -66,7 +67,7 @@ def build_plans(data,now,catalog):
              key('wind_speed',c['wind_speed_10m']),key('wind_gust',c['wind_gusts_10m']),
              key('humidity',c['relative_humidity_2m']),key('pressure',c['pressure_msl'])]
     h=w['hourly'];idx=[i for i,t in enumerate(h['time']) if local<dt.datetime.fromisoformat(t).replace(tzinfo=TZ)<=local+dt.timedelta(hours=6)]
-    if len(idx)<5:raise ValueError('Incomplete six-hour forecast')
+    if len(idx)<5:raise WeatherUnavailable('Incomplete six-hour forecast')
     codes={int(h['weather_code'][i]) for i in idx}
     forecast=['forecast_intro'];phenomena=[]
     if codes&{95,96,99}:phenomena.append('phenomenon_thunder')
@@ -79,7 +80,7 @@ def build_plans(data,now,catalog):
     temps=[finite(h['temperature_2m'][i]) for i in idx]
     forecast += [temp('minimum',min(temps)),temp('maximum',max(temps))]
     d=w['daily'];tomorrow=(local.date()+dt.timedelta(days=1)).isoformat()
-    if tomorrow not in d['time']:raise ValueError('Tomorrow forecast unavailable')
+    if tomorrow not in d['time']:raise WeatherUnavailable('Tomorrow forecast unavailable')
     j=d['time'].index(tomorrow);sun=dt.datetime.fromisoformat(d['sunrise'][j])
     tomorrow_plan=['tomorrow_intro',temp('minimum',d['temperature_2m_min'][j]),temp('maximum',d['temperature_2m_max'][j]),'sunrise_hour_'+str(sun.hour),'minute_'+str(sun.minute)]
     space=['space_intro'];scales=data.get('scales',{}).get('0',{})

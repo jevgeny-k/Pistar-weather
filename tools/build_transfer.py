@@ -23,10 +23,12 @@ def build(destination):
     add(ROOT / 'assets/encode', 'relay/encode')
     add(ROOT / 'config/site.example.json', 'config/site.example.json')
     add(ROOT / 'work/pistar-weather/site_settings.py', 'autonomous/site_settings.py')
-    for name in ('assemble.py', 'autonomous.py', 'runtime.py', 'play.py', 'readiness.py', 'retry_http.py'):
+    for name in ('assemble.py', 'autonomous.py', 'runtime.py', 'play.py', 'readiness.py', 'retry_http.py', 'bulletin_cache.py'):
         add(ROOT / 'work/pistar-autonomous' / name, 'autonomous/' + name)
     add(ROOT / 'work/pistar-autonomous/bootcheck.py', 'relay/bootcheck.py')
     base = ROOT / 'outputs/pi-only-preparation'
+    for name in ('fallback-notice.wav', 'fallback-notice.json'):
+        add(base / name, 'autonomous/' + name)
     catalog = json.loads((base / 'catalog.json').read_text(encoding='utf-8'))
     bank = json.loads((base / 'bank-manifest.json').read_text(encoding='utf-8'))
     if len(catalog['entries']) != 1604 or set(catalog['entries']) != set(bank['generated']):

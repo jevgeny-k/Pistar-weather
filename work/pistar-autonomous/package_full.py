@@ -29,8 +29,9 @@ shutil.copy2(Path(__file__).parent/'OPERATIONS.md',BASE/'OPERATIONS.md')
 archive=BASE/'pistar-autonomous-v1.zip'
 with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED) as z:
     for name in ('catalog.json','bank-manifest.json'):z.write(BASE/name,name)
+    for name in ('fallback-notice.wav','fallback-notice.json'):z.write(BASE/name,name)
     z.write(BASE/'OPERATIONS.md','OPERATIONS.md')
-    for name in ('assemble.py','runtime.py','play.py','autonomous.py','readiness.py','retry_http.py','site_settings.py'):z.write(source/name,name)
+    for name in ('assemble.py','runtime.py','play.py','autonomous.py','readiness.py','retry_http.py','bulletin_cache.py','site_settings.py'):z.write(source/name,name)
     for p in sorted((BASE/'bank').glob('*.wav')):z.write(p,p.relative_to(BASE).as_posix())
 digest=hashlib.sha256(archive.read_bytes()).hexdigest()
 (BASE/'pistar-autonomous-v1.zip.sha256').write_text(digest+'  '+archive.name+'\n')

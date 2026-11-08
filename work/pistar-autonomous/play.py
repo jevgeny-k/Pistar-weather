@@ -11,10 +11,15 @@ sys.path.insert(0,'/opt/pistar-weather')
 from weather import BASE,STATE,build_call,request
 from readiness import wait_for_ready
 
-def play(directory):
+def play(directory,cached=False):
     directory=Path(directory)
     manifest=json.loads((directory/'manifest.json').read_text())
     stamp=dt.datetime.fromisoformat(manifest['generated_utc'])
+    if cached:
+        fallback=manifest.get('fallback',{})
+        if fallback.get('original_generated_utc')!=manifest['generated_utc'] or not fallback.get('notice_sha256'):raise ValueError('Cached replay needs an explicit notice')
+        stamp=dt.datetime.fromisoformat(fallback['activated_utc'])
+    elif manifest.get('fallback'):raise ValueError('Cached report requires explicit replay mode')
     def fresh():
         if not -60<=(dt.datetime.now(dt.timezone.utc)-stamp).total_seconds()<=1800:raise ValueError('Bulletin expired')
     fresh();wait_for_ready(request);fresh();packets=[]
