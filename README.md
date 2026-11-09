@@ -63,3 +63,5 @@ An optional [cross-slot weather guard](outputs/pi-only-preparation/cross-slot-gu
 [Whole-bulletin weather priority](outputs/pi-only-preparation/weather-priority.md) is now available as an alternative to yielding to TS2. It skips new network calls during the entire report, including gaps, and restores groups afterward. Both policies remain opt-in; choose one explicitly.
 
 [Codec repeatability checks](outputs/pi-only-preparation/codec-repeatability.md) document deterministic SoX preparation and an offline helper that verifies actual codec artifacts without RF.
+
+[Queue overflow investigation and optional RAM diagnostics](outputs/pi-only-preparation/queue-overflow-investigation-20261109.md) distinguish host queue errors from modem status and provide a bounded recorder for the next onset. The intermittent silent-RF/PTT fault remains unresolved.

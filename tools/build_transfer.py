@@ -26,6 +26,8 @@ def build(destination):
     for name in ('assemble.py', 'autonomous.py', 'runtime.py', 'play.py', 'readiness.py', 'retry_http.py', 'bulletin_cache.py', 'verify_codec_repeatability.py'):
         add(ROOT / 'work/pistar-autonomous' / name, 'autonomous/' + name)
     add(ROOT / 'work/pistar-autonomous/bootcheck.py', 'relay/bootcheck.py')
+    for name in ('queue_diagnostics.py', 'pistar-weather-diagnostics.service'):
+        add(ROOT / 'work/pistar-weather' / name, 'diagnostics/' + name)
     base = ROOT / 'outputs/pi-only-preparation'
     for name in ('fallback-notice.wav', 'fallback-notice.json'):
         add(base / name, 'autonomous/' + name)

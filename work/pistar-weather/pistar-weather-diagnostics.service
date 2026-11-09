@@ -1,0 +1,26 @@
+[Unit]
+Description=One bounded RAM snapshot at the next DMR queue overflow
+After=mmdvmhost.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /opt/pistar-weather/queue_diagnostics.py
+Environment=PYTHONDONTWRITEBYTECODE=1
+RuntimeDirectory=pistar-weather-diagnostics
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+UMask=0077
+Restart=no
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_PACKET AF_INET AF_UNIX
+ReadWritePaths=/run/pistar-weather-diagnostics
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
