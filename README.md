@@ -61,3 +61,5 @@ These changes postdate the original v0.1.0 release asset. To include them, use c
 An optional [cross-slot weather guard](outputs/pi-only-preparation/cross-slot-guard-20261109.md) is available for an ongoing reliability trial. It makes weather yield to traffic on either slot and may truncate or skip reports on busy groups. It is off by default and does not claim to fix modem firmware.
 
 [Whole-bulletin weather priority](outputs/pi-only-preparation/weather-priority.md) is now available as an alternative to yielding to TS2. It skips new network calls during the entire report, including gaps, and restores groups afterward. Both policies remain opt-in; choose one explicitly.
+
+[Codec repeatability checks](outputs/pi-only-preparation/codec-repeatability.md) document deterministic SoX preparation and an offline helper that verifies actual codec artifacts without RF.

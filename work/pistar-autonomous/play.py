@@ -30,7 +30,7 @@ def play(directory,cached=False):
         wav=directory/name
         if hashlib.sha256(wav.read_bytes()).hexdigest()!=clip['sha256']:raise ValueError('Damaged audio')
         raw=wav.with_suffix('.raw');ambe=wav.with_suffix('.ambe72');decoded=wav.with_suffix('.decoded.raw')
-        subprocess.run(['sox',str(wav),'-t','raw','-r','8000','-e','signed-integer','-b','16','-c','1','-L',str(raw),'gain','-6','highpass','100','lowpass','3400','gain','-n','-3','pad','0.5','0.5'],check=True)
+        subprocess.run(['sox','-D',str(wav),'-t','raw','-r','8000','-e','signed-integer','-b','16','-c','1','-L',str(raw),'gain','-6','highpass','100','lowpass','3400','gain','-n','-3','pad','0.5','0.5'],check=True)
         subprocess.run([str(BASE/'encode'),str(raw),str(ambe)],check=True)
         subprocess.run([str(BASE/'encode'),'-d',str(ambe),str(decoded)],check=True)
         samples=array('h');samples.frombytes(decoded.read_bytes())

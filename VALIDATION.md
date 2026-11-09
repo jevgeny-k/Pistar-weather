@@ -25,3 +25,5 @@ Added an opt-in cross-slot weather guard after a further confirmed silent-RF/PTT
 ## Whole-bulletin weather priority
 
 At the operator's request, added an opt-in ownership lease spanning all weather parts. All30 relay tests passed on the Pi; full codec dry runs separately verified ownership release on success and simulated failure without RF. Current source preserves anonymous private-site settings. See `outputs/pi-only-preparation/weather-priority.md` for policy, bounded resource use, deployment and rollback. Audible confirmation and sustained reliability remain separate checks.
+
+Autonomous playback now disables SoX automatic dithering for reproducible AMBE input. Two full offline codec runs on each of two four-part reports produced identical raw/AMBE/decoded hashes and passed the existing acceptance checks. The verification helper stubs every relay operation and redirects packet output to temporary storage. See `outputs/pi-only-preparation/codec-repeatability.md`; this does not resolve the separate RF/PTT fault.
