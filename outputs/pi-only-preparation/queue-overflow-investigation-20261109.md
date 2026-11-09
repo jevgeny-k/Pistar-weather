@@ -35,3 +35,13 @@ Read `state.json`: `armed`, `capturing` or `complete`. After a completed capture
 ## Remaining uncertainty
 
 The first overflow's packet/queue history is still missing. The new recorder is intended to obtain it. A host restart restores reception but reinitializes modem state too, so it does not isolate the host from firmware. RF timing/modulation failure cannot be ruled in or out by these software captures alone. No firmware flash, speculative modem calibration or periodic restart workaround was installed.
+
+## Later recurrence and recorder correction
+
+The operator confirmed another silent report at23:30 Riga (21:30 UTC), again with PTT timeout. All four weather parts passed the codec checks and completed local delivery. No new queue overflow had occurred: the latest host error was still20:45:57 UTC. A manual diagnostic trigger at21:33:41 UTC retained1718 pre-events and327 post-events in a37044-byte snapshot. The private archive was copied locally and its checksum verified before host recovery.
+
+The UART transcript contained114 status replies, DMR mode and TX flag throughout,437 TS2 frame writes, TS1 free space28, TS2 free space5..28 and no reported overflow/lockout flags. Host-only restart followed by replay of the same report's first part restored audible reception, explicitly confirmed by the operator. This further shows that overflow-only detection and weather priority do not solve or reliably detect this RF fault.
+
+Inspection also found a defect in the first recorder: protocol-specific IP packet sockets received the incoming loopback copy, but the metadata filter selected outgoing loopback copies. Consequently these old snapshots contain external network metadata and UART evidence, but no local weather-packet metadata. The original smoke test had not checked both interfaces. Do not use those snapshots to claim weather pacing measurements.
+
+Capture sockets now use ETH_P_ALL while retaining the existing IPv4/UDP/DMR privacy filters. A controlled local UDP probe on the Pi showed the old socket receiving only the incoming copy, and the new socket receiving both copies; filtering retains exactly one outgoing copy. A new privileged integration test exercises the actual capture-socket helper and verifies that one synthetic loopback packet is recorded without addressing MMDVMHost or generating RF. All seven tests passed. The corrected recorder was installed and rearmed after preserving the previous evidence. No radio policy, firmware or calibration was changed for this correction.

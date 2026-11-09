@@ -21,6 +21,16 @@ MAX_EVENTS=12000
 UART_LIMIT=512*1024
 STATE=Path('/run/pistar-weather-diagnostics')
 
+def open_capture_socket(interface):
+    # Protocol-specific IP sockets omit the outgoing loopback copy on this kernel.
+    # ETH_P_ALL plus metadata() filtering retains exactly one local copy.
+    sock=socket.socket(socket.AF_PACKET,socket.SOCK_RAW,socket.htons(0x0003))
+    try:
+        sock.bind((interface,0));sock.setblocking(False)
+        return sock
+    except OSError:
+        sock.close();raise
+
 def metadata(frame,interface,direction,wall,mono):
     if interface not in {'lo','wlan0'} or (interface=='lo' and direction!=4):return None
     if len(frame)<42 or frame[12:14]!=b'\x08\x00':return None
@@ -94,13 +104,11 @@ def main():
     signal.signal(signal.SIGUSR1,lambda *_:manual.__setitem__(0,True))
     sel=selectors.DefaultSelector();sockets=[]
     for interface in ('lo','wlan0'):
-        sock=socket.socket(socket.AF_PACKET,socket.SOCK_RAW,socket.htons(0x0800))
-        try:sock.bind((interface,0))
+        try:sock=open_capture_socket(interface)
         except OSError:
-            sock.close()
             if interface=='lo':raise
             continue
-        sock.setblocking(False);sel.register(sock,selectors.EVENT_READ,interface);sockets.append(sock)
+        sel.register(sock,selectors.EVENT_READ,interface);sockets.append(sock)
     window=Window();tail=ErrorTail();next_poll=0.;trigger=None;trace=None;pre=[];post=collections.deque(maxlen=4000);finish=None
     armed=dt.datetime.now(dt.timezone.utc).isoformat()
     atomic_json(STATE/'state.json',{'phase':'armed','armed_utc':armed})

@@ -3,7 +3,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from queue_diagnostics import metadata,Window,ErrorTail,save_snapshot,MAX_EVENTS
+import os
+import socket
+import time
+from queue_diagnostics import metadata,Window,ErrorTail,save_snapshot,MAX_EVENTS,open_capture_socket
 
 def frame(payload):
     ethernet=bytes(12)+b'\x08\x00'
@@ -12,6 +15,23 @@ def frame(payload):
     return ethernet+ip+udp+payload
 
 class DiagnosticTests(unittest.TestCase):
+    @unittest.skipUnless(hasattr(socket,'AF_PACKET') and getattr(os,'geteuid',lambda:1)()==0,'Requires Linux raw-packet privileges')
+    def test_real_loopback_outgoing_copy_is_captured_without_rf(self):
+        capture=open_capture_socket('lo');capture.setblocking(True);capture.settimeout(.1)
+        server=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);server.bind(('127.0.0.1',0))
+        client=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        try:
+            data=bytearray(55);data[:4]=b'DMRD';data[5:8]=(1).to_bytes(3,'big');data[16:20]=b'TEST'
+            client.sendto(data,server.getsockname());deadline=time.monotonic()+1;found=[]
+            while time.monotonic()<deadline:
+                try:packet,addr=capture.recvfrom(4096)
+                except socket.timeout:continue
+                event=metadata(packet,'lo',addr[2],time.time(),time.monotonic())
+                if event and event[5]==server.getsockname()[1]:found.append(event)
+            self.assertEqual(len(found),1)
+            self.assertEqual(found[0][3],4)
+        finally:capture.close();server.close();client.close()
+
     def test_non_dmr_authentication_is_not_recorded(self):
         self.assertIsNone(metadata(frame(b'RPTK'+b'secret'*20),'wlan0',0,1.,2.))
 
