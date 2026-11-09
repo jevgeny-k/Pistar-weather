@@ -13,11 +13,11 @@ def packet(flags):
     return b'DMRD\x00'+RADIO_ID.to_bytes(3,'big')*2+RADIO_ID.to_bytes(4,'big')+bytes([flags])+b'TEST'+bytes(35)
 
 @contextmanager
-def relay_pair(enabled=True):
+def relay_pair(enabled=True, weather_priority=False):
     with tempfile.TemporaryDirectory() as folder, patch.object(proxy,'RADIO_ID',RADIO_ID):
         master=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);master.bind(('127.0.0.1',0));master.settimeout(.1)
         host=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);host.bind(('127.0.0.1',0));host.settimeout(.1)
-        relay=proxy.Relay(master.getsockname(),('127.0.0.1',0),Path(folder)/'control.sock',folder,idle=0,serialize_slots=enabled)
+        relay=proxy.Relay(master.getsockname(),('127.0.0.1',0),Path(folder)/'control.sock',folder,idle=0,serialize_slots=enabled,weather_priority=weather_priority)
         client,peer=socket.socketpair();peer.settimeout(.1)
         try:
             host.sendto(b'RPTLtest',relay.down.getsockname());relay.step(0)

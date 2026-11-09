@@ -36,10 +36,20 @@ def play(directory,cached=False):
         samples=array('h');samples.frombytes(decoded.read_bytes())
         if not 8000<len(samples)<41*8000 or not 1000<max(abs(v) for v in samples)<32767:raise ValueError('Bad encoded audio')
         packet=STATE/('autonomous-'+str(i)+'.dmr55');packet.write_bytes(build_call(ambe.read_bytes()));packets.append(packet)
-    for i,packet in enumerate(packets):
-        if i:time.sleep(5)
-        fresh();result=request({'op':'play','file':str(packet)});print(json.dumps(result),flush=True)
-        if not result.get('ok'):raise RuntimeError('Playback interrupted')
+    token=None
+    if request({'op':'status'}).get('weather_priority'):
+        reserved=request({'op':'begin_bulletin'})
+        if not reserved.get('ok'):raise RuntimeError('Could not reserve weather priority')
+        token=reserved['token']
+    try:
+        for i,packet in enumerate(packets):
+            if i:time.sleep(5)
+            fresh();result=request({'op':'play','file':str(packet)});print(json.dumps(result),flush=True)
+            if not result.get('ok'):raise RuntimeError('Playback interrupted')
+    finally:
+        if token:
+            released=request({'op':'end_bulletin','token':token})
+            if not released.get('ok'):raise RuntimeError('Could not release weather priority')
     print('AUTONOMOUS_BULLETIN_SENT',flush=True)
 
 if __name__=='__main__':play(sys.argv[1])

@@ -44,7 +44,8 @@ def simulate(module,wait_for_idle=False):
     relay=module.Relay.__new__(module.Relay)
     relay.sel=Selector(clock,master);relay.up=master;relay.down=host
     relay.host=('127.0.0.1',1234);relay.connected=True;relay.idle=.05
-    relay.serialize_slots=False
+    relay.serialize_slots=False;relay.weather_priority=False
+    relay.reservation=None;relay.priority_draining=set();relay.network_active={};relay.suppressed={}
     relay.last_voice=.1 if wait_for_idle else -1.
     relay.job={'client':Client(),'packets':[b'voice'+bytes([i%256]) for i in range(240)],'index':0,'due':0.,'deadline':100.}
     with patch.object(module.time,'monotonic',clock.now):

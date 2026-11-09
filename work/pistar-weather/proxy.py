@@ -11,6 +11,7 @@ import logging
 import os
 from pathlib import Path
 import selectors
+import secrets
 import socket
 import time
 
@@ -40,14 +41,19 @@ def validate_packets(raw):
 
 
 class Relay:
-    def __init__(self, upstream, listen, control, state_dir, idle=5.0, serialize_slots=False):
+    def __init__(self, upstream, listen, control, state_dir, idle=5.0, serialize_slots=False, weather_priority=False):
         self.sel = selectors.DefaultSelector()
         self.upstream = upstream
         self.control_path = Path(control)
         self.state_dir = Path(state_dir).resolve()
+        self.weather_priority = weather_priority
+        self.reservation = None
+        self.priority_draining = set()
+        self.network_active = {}
+        self.suppressed = {}
         self.serialize_slots = serialize_slots
         # Experimental guard: let TXHang=10 expire before a weather part.
-        self.idle = max(idle, 12.0) if serialize_slots else idle
+        self.idle = max(idle, 12.0) if (serialize_slots or weather_priority) else idle
         self.host = None
         self.last_voice = 0.0
         self.connected = False
@@ -77,9 +83,42 @@ class Relay:
             LOG.info('%s: %s', 'Completed' if ok else 'Stopped', reason)
             self.reply(job['client'], {'ok': ok, 'message': reason, 'sent': job['index']})
 
+    def expire_priority(self, now):
+        if self.reservation and now >= self.reservation['until']:
+            if not self.reservation.get('released') and self.job:
+                self.finish(False, 'Weather priority lease expired')
+            self.reservation = None
+            self.priority_draining.clear()
+            LOG.info('Weather priority released')
+        for mapping, ttl in ((self.network_active, 2.0), (self.suppressed, 180.0)):
+            for key, stamp in list(mapping.items()):
+                if now-stamp > ttl: del mapping[key]
+
+    @staticmethod
+    def remember(mapping, key, now):
+        mapping[key] = now
+        if len(mapping) > 256: del mapping[min(mapping, key=mapping.get)]
+
+    def forward_network_voice(self, data):
+        if len(data) != 55 or not data.startswith(b'DMRD'): return True
+        now = time.monotonic()
+        key = (data[15] & 0x80, data[5:11], data[16:20])
+        terminal = data[15] & 0x20 and data[15] & 0x0f == 2
+        # Once a call is skipped, never resume its tail after the bulletin.
+        blocked = key in self.suppressed or bool(self.reservation and key not in self.priority_draining)
+        if blocked:
+            if terminal: self.suppressed.pop(key, None)
+            else: self.remember(self.suppressed, key, now)
+            return False
+        if terminal:
+            self.network_active.pop(key, None)
+            self.priority_draining.discard(key)
+        else: self.remember(self.network_active, key, now)
+        return True
+
     def voice_activity(self):
         self.last_voice = time.monotonic()
-        if self.job and self.job['index']:
+        if self.job and self.job['index'] and not self.reservation:
             # Yield to real traffic. Terminator is local downlink only.
             self.down.sendto(self.job['packets'][-1], self.host)
             self.finish(False, 'Real radio/network traffic took priority')
@@ -88,11 +127,28 @@ class Relay:
         self.sel.unregister(client)
         try:
             request = json.loads(client.recv(4096))
+            self.expire_priority(time.monotonic())
+            if request.get('op') == 'begin_bulletin':
+                if not self.weather_priority: raise ValueError('Weather priority is disabled')
+                if self.reservation and not self.reservation.get('released'): raise ValueError('Bulletin already reserved')
+                token = secrets.token_hex(16)
+                self.priority_draining = set(self.network_active) if not self.reservation else set()
+                self.reservation = dict(token=token, until=time.monotonic()+840, released=False)
+                LOG.info('Weather priority reserved; draining %d existing calls', len(self.priority_draining))
+                self.reply(client, {'ok': True, 'token': token}); return
+            if request.get('op') == 'end_bulletin':
+                if not self.reservation or request.get('token') != self.reservation['token']: raise ValueError('Invalid reservation token')
+                self.reservation['released'] = True
+                self.reservation['until'] = time.monotonic()+12
+                self.priority_draining.clear()
+                self.reply(client, {'ok': True}); return
             if request.get('op') == 'status':
                 self.reply(client, {'ok': True, 'connected': self.connected,
                     'host': self.host, 'busy': bool(self.job),
                     'idle_seconds': round(time.monotonic()-self.last_voice, 1),
-                    'serialize_slots': self.serialize_slots, 'guard_seconds': self.idle})
+                    'serialize_slots': self.serialize_slots, 'guard_seconds': self.idle,
+                    'weather_priority': self.weather_priority, 'priority_active': bool(self.reservation),
+                    'suppressed_streams': len(self.suppressed)})
                 return
             if request.get('op') != 'play': raise ValueError('Unknown command')
             if self.job: raise ValueError('Already playing/queued')
@@ -108,6 +164,7 @@ class Relay:
 
     def step(self, timeout=0.02):
         now = time.monotonic()
+        self.expire_priority(now)
         if self.job and now > self.job['deadline']:
             self.finish(False, 'Timed out waiting for a free channel')
         job = self.job
@@ -131,14 +188,15 @@ class Relay:
                         self.finish(False, 'MMDVMHost reconnected')
                         self.connected = False
                         self.host = addr
-                    if len(data) >= 16 and data.startswith(b'DMRD') and (self.serialize_slots or not data[15] & 0x80): self.voice_activity()
+                    if len(data) >= 16 and data.startswith(b'DMRD') and (self.serialize_slots or self.weather_priority or not data[15] & 0x80): self.voice_activity()
                     # ONLY packets actually received from MMDVMHost go upstream.
                     self.up.send(data)
                 elif tag == 'up':
                     data = self.up.recv(2048)
+                    if not self.forward_network_voice(data): continue
                     if data.startswith((b'MSTNAK', b'MSTCL')): self.connected = False
                     if data.startswith(b'MSTPONG'): self.connected = True
-                    if len(data) >= 16 and data.startswith(b'DMRD') and (self.serialize_slots or not data[15] & 0x80): self.voice_activity()
+                    if len(data) >= 16 and data.startswith(b'DMRD') and (self.serialize_slots or self.weather_priority or not data[15] & 0x80): self.voice_activity()
                     if self.host: self.down.sendto(data, self.host)
             except (BlockingIOError, ConnectionRefusedError): pass
         now = time.monotonic()
@@ -148,6 +206,7 @@ class Relay:
                 if now-self.last_voice < self.idle: return
                 # Anchor the stream once the channel really becomes idle.
                 job['due'] = now
+                if self.reservation: self.priority_draining.clear()
             # Injection has no code path to self.up: never sent to BrandMeister.
             self.down.sendto(job['packets'][job['index']], self.host)
             job['index'] += 1
@@ -176,6 +235,9 @@ def main():
     a.add_argument('--serialize-slots', action='store_true',
                    default=os.environ.get('PISTAR_WEATHER_SERIALIZE_SLOTS') == '1',
                    help='Experimental: weather yields to traffic on either slot')
+    a.add_argument('--weather-priority', action='store_true',
+                   default=os.environ.get('PISTAR_WEATHER_PRIORITY') == '1',
+                   help='Reserve the whole weather bulletin over new network calls')
     args = a.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
     require_radio_id(RADIO_ID)
@@ -186,7 +248,7 @@ def main():
     upstream = (socket.gethostbyname(upstream_host), args.port or int(site.get('upstream_port', 62031)))
     relay = Relay(upstream, ('127.0.0.1', args.listen_port),
                   Path(args.state_dir)/'control.sock', args.state_dir,
-                  serialize_slots=args.serialize_slots)
+                  serialize_slots=args.serialize_slots, weather_priority=args.weather_priority)
     LOG.info('Cross-slot weather guard: %s; quiet interval %.1fs', relay.serialize_slots, relay.idle)
     LOG.info('Relay ready; upstream %s; local private recipient %s', upstream, RADIO_ID)
     try:

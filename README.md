@@ -59,3 +59,5 @@ Current `main` adds corrected 60 ms relay pacing, bounded retries for transient 
 These changes postdate the original v0.1.0 release asset. To include them, use current source plus the phrase-bank/encoder assets from that release and rebuild with `tools/build_transfer.py`; the builder includes both fallback-notice assets. The existing release ZIP has not been replaced by this source update.
 
 An optional [cross-slot weather guard](outputs/pi-only-preparation/cross-slot-guard-20261109.md) is available for an ongoing reliability trial. It makes weather yield to traffic on either slot and may truncate or skip reports on busy groups. It is off by default and does not claim to fix modem firmware.
+
+[Whole-bulletin weather priority](outputs/pi-only-preparation/weather-priority.md) is now available as an alternative to yielding to TS2. It skips new network calls during the entire report, including gaps, and restores groups afterward. Both policies remain opt-in; choose one explicitly.

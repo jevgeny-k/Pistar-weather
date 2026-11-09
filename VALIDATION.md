@@ -21,3 +21,7 @@ The anonymized source port passed all 38 tests on the Pi in an isolated temporar
 ## November 9 opt-in experiment
 
 Added an opt-in cross-slot weather guard after a further confirmed silent-RF/PTT-timeout recurrence. All 22 relay/framing/configuration tests passed on the Pi, including five real-UDP guard tests and the existing pacing/isolation checks. Tests used a temporary directory, synthetic IDs and local sockets; they did not transmit through the live relay. Source default remains independent slots. See the diagnostic note for behavior, tradeoffs and rollback; a lasting RF fix has not been demonstrated.
+
+## Whole-bulletin weather priority
+
+At the operator's request, added an opt-in ownership lease spanning all weather parts. All30 relay tests passed on the Pi; full codec dry runs separately verified ownership release on success and simulated failure without RF. Current source preserves anonymous private-site settings. See `outputs/pi-only-preparation/weather-priority.md` for policy, bounded resource use, deployment and rollback. Audible confirmation and sustained reliability remain separate checks.
