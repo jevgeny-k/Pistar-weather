@@ -57,3 +57,5 @@ No operator ID is embedded in public code. Before deployment, supply `/etc/pista
 Current `main` adds corrected 60 ms relay pacing, bounded retries for transient HTTP failures, and explicitly announced replay of the last successful bulletin from a single RAM cache. See [fallback behavior](outputs/pi-only-preparation/FALLBACK.md), [radio investigation](outputs/pi-only-preparation/radio-investigation-20261108.md), and [validation](VALIDATION.md). Intermittent silent RF transmission remains under investigation.
 
 These changes postdate the original v0.1.0 release asset. To include them, use current source plus the phrase-bank/encoder assets from that release and rebuild with `tools/build_transfer.py`; the builder includes both fallback-notice assets. The existing release ZIP has not been replaced by this source update.
+
+An optional [cross-slot weather guard](outputs/pi-only-preparation/cross-slot-guard-20261109.md) is available for an ongoing reliability trial. It makes weather yield to traffic on either slot and may truncate or skip reports on busy groups. It is off by default and does not claim to fix modem firmware.

@@ -40,12 +40,14 @@ def validate_packets(raw):
 
 
 class Relay:
-    def __init__(self, upstream, listen, control, state_dir, idle=5.0):
+    def __init__(self, upstream, listen, control, state_dir, idle=5.0, serialize_slots=False):
         self.sel = selectors.DefaultSelector()
         self.upstream = upstream
         self.control_path = Path(control)
         self.state_dir = Path(state_dir).resolve()
-        self.idle = idle
+        self.serialize_slots = serialize_slots
+        # Experimental guard: let TXHang=10 expire before a weather part.
+        self.idle = max(idle, 12.0) if serialize_slots else idle
         self.host = None
         self.last_voice = 0.0
         self.connected = False
@@ -89,7 +91,8 @@ class Relay:
             if request.get('op') == 'status':
                 self.reply(client, {'ok': True, 'connected': self.connected,
                     'host': self.host, 'busy': bool(self.job),
-                    'idle_seconds': round(time.monotonic()-self.last_voice, 1)})
+                    'idle_seconds': round(time.monotonic()-self.last_voice, 1),
+                    'serialize_slots': self.serialize_slots, 'guard_seconds': self.idle})
                 return
             if request.get('op') != 'play': raise ValueError('Unknown command')
             if self.job: raise ValueError('Already playing/queued')
@@ -128,14 +131,14 @@ class Relay:
                         self.finish(False, 'MMDVMHost reconnected')
                         self.connected = False
                         self.host = addr
-                    if len(data) >= 16 and data.startswith(b'DMRD') and not data[15] & 0x80: self.voice_activity()
+                    if len(data) >= 16 and data.startswith(b'DMRD') and (self.serialize_slots or not data[15] & 0x80): self.voice_activity()
                     # ONLY packets actually received from MMDVMHost go upstream.
                     self.up.send(data)
                 elif tag == 'up':
                     data = self.up.recv(2048)
                     if data.startswith((b'MSTNAK', b'MSTCL')): self.connected = False
                     if data.startswith(b'MSTPONG'): self.connected = True
-                    if len(data) >= 16 and data.startswith(b'DMRD') and not data[15] & 0x80: self.voice_activity()
+                    if len(data) >= 16 and data.startswith(b'DMRD') and (self.serialize_slots or not data[15] & 0x80): self.voice_activity()
                     if self.host: self.down.sendto(data, self.host)
             except (BlockingIOError, ConnectionRefusedError): pass
         now = time.monotonic()
@@ -170,6 +173,9 @@ def main():
     a.add_argument('--port', type=int)
     a.add_argument('--listen-port', type=int, default=62039)
     a.add_argument('--state-dir', default='/run/pistar-weather')
+    a.add_argument('--serialize-slots', action='store_true',
+                   default=os.environ.get('PISTAR_WEATHER_SERIALIZE_SLOTS') == '1',
+                   help='Experimental: weather yields to traffic on either slot')
     args = a.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
     require_radio_id(RADIO_ID)
@@ -179,7 +185,9 @@ def main():
         a.error('Set upstream_host in the private site configuration')
     upstream = (socket.gethostbyname(upstream_host), args.port or int(site.get('upstream_port', 62031)))
     relay = Relay(upstream, ('127.0.0.1', args.listen_port),
-                  Path(args.state_dir)/'control.sock', args.state_dir)
+                  Path(args.state_dir)/'control.sock', args.state_dir,
+                  serialize_slots=args.serialize_slots)
+    LOG.info('Cross-slot weather guard: %s; quiet interval %.1fs', relay.serialize_slots, relay.idle)
     LOG.info('Relay ready; upstream %s; local private recipient %s', upstream, RADIO_ID)
     try:
         while True: relay.step()

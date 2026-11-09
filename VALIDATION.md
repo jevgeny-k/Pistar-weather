@@ -17,3 +17,7 @@ Added deterministic relay pacing tests, bounded HTTP retry tests, six RAM-cache 
 The source port preserves anonymous site configuration and synthetic test identities. The phrase bank was not regenerated. Read `outputs/pi-only-preparation/radio-investigation-20261108.md` for measured timing and the unresolved RF limit.
 
 The anonymized source port passed all 38 tests on the Pi in an isolated temporary directory: 21 autonomous checks and 17 relay/framing/configuration/restore checks. No test submitted packets to the real relay or changed live settings. On Windows, all 21 autonomous checks passed; full DMR integration there was limited by missing bitarray and AF_UNIX support. A new transfer bundle was built and verified with all 1,604 bank entries and the fallback notice.
+
+## November 9 opt-in experiment
+
+Added an opt-in cross-slot weather guard after a further confirmed silent-RF/PTT-timeout recurrence. All 22 relay/framing/configuration tests passed on the Pi, including five real-UDP guard tests and the existing pacing/isolation checks. Tests used a temporary directory, synthetic IDs and local sockets; they did not transmit through the live relay. Source default remains independent slots. See the diagnostic note for behavior, tradeoffs and rollback; a lasting RF fix has not been demonstrated.
