@@ -1,0 +1,16 @@
+[Unit]
+Description=Restart MMDVMHost after weather and diagnostics finish
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /opt/pistar-weather/modem_maintenance.py
+Environment=PYTHONDONTWRITEBYTECODE=1
+TimeoutStartSec=20min
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/run/pistar-weather

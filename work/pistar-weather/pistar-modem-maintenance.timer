@@ -1,0 +1,11 @@
+[Unit]
+Description=Six-hour MMDVMHost maintenance with weather exclusion
+
+[Timer]
+OnActiveSec=6h
+OnUnitInactiveSec=6h
+AccuracySec=1min
+Unit=pistar-modem-maintenance.service
+
+[Install]
+WantedBy=timers.target

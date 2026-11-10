@@ -31,3 +31,7 @@ Autonomous playback now disables SoX automatic dithering for reproducible AMBE i
 Optional queue-onset diagnostics are described in `outputs/pi-only-preparation/queue-overflow-investigation-20261109.md`. Six Linux tests and a real bounded root-only RAM capture passed; evidence was copied privately, checksum verified and the recorder rearmed. The recorder is not an RF audio detector and does not restart the host automatically. Transfer bundles place it under an optional `diagnostics/` directory.
 
 Recorder correction: a real root-only loopback integration test exposed that ETH_P_IP plus outgoing-only filtering omitted local weather copies on the Pi kernel. Capture now uses ETH_P_ALL followed by the same privacy filter. All seven diagnostic tests passed, including exactly-one-copy detection on an isolated local UDP socket with no RF. Older captures remain valid external-network/UART evidence but must not be treated as local weather pacing evidence.
+
+## November 10 six-hour maintenance workaround
+
+The operator explicitly requested this workaround after another silent report without a new host error. Seven Linux tests passed for shared-lock exclusion, PID/reservation/capture deferral, bounded failure and fresh-login readiness. A live test showed weather queued with no PID during maintenance and starting only after maintenance readiness. See `outputs/pi-only-preparation/modem-maintenance.md`. This is not an RF fault detector or a root-cause fix.

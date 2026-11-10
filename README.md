@@ -65,3 +65,5 @@ An optional [cross-slot weather guard](outputs/pi-only-preparation/cross-slot-gu
 [Codec repeatability checks](outputs/pi-only-preparation/codec-repeatability.md) document deterministic SoX preparation and an offline helper that verifies actual codec artifacts without RF.
 
 [Queue overflow investigation and optional RAM diagnostics](outputs/pi-only-preparation/queue-overflow-investigation-20261109.md) distinguish host queue errors from modem status and provide a bounded recorder for the next onset. The intermittent silent-RF/PTT fault remains unresolved.
+
+An optional [six-hour MMDVMHost maintenance timer](outputs/pi-only-preparation/modem-maintenance.md) was added at the operator's explicit request. It waits for weather to finish and makes new scheduled bulletins wait for reconnection. It is a workaround, not a fix for the unresolved RF fault, and is not enabled by a default package deployment.

@@ -28,6 +28,8 @@ def build(destination):
     add(ROOT / 'work/pistar-autonomous/bootcheck.py', 'relay/bootcheck.py')
     for name in ('queue_diagnostics.py', 'pistar-weather-diagnostics.service'):
         add(ROOT / 'work/pistar-weather' / name, 'diagnostics/' + name)
+    for name in ('modem_maintenance.py', 'pistar-modem-maintenance.service', 'pistar-modem-maintenance.timer', '40-modem-maintenance-ordering.conf'):
+        add(ROOT / 'work/pistar-weather' / name, 'maintenance/' + name)
     base = ROOT / 'outputs/pi-only-preparation'
     for name in ('fallback-notice.wav', 'fallback-notice.json'):
         add(base / name, 'autonomous/' + name)

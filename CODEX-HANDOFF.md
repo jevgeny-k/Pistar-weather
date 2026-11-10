@@ -157,3 +157,7 @@ To stop new calls, stop/disable the fresh timer as appropriate and stop an activ
 ## Optional queue-onset investigation
 
 When a deployment task explicitly includes diagnosis, see `docs/queue-overflow-investigation-20261109.md`. The transfer bundle's separate `diagnostics/` directory contains an optional root-only one-shot RAM recorder and service. These are not part of the normal runtime/systemd installation map. Do not enable diagnostic packet/UART capture as a routine installation side effect. Private evidence must remain on the target or the authorized investigator's local workspace; never commit it. The recorder catches a new host queue error or a manual signal, not inaudible RF itself, and performs no automatic restarts.
+
+## Optional scheduled host recovery
+
+Only when the operator explicitly requests scheduled restarts, read `docs/modem-maintenance.md` and use the separate `maintenance/` assets. Install the weather ordering drop-in together with the helper/timer; the timer alone does not provide the complete weather exclusion policy. This operator-requested six-hour workaround does not establish an RF cause or replace audible validation. Do not silently enable it as a general installation default.
