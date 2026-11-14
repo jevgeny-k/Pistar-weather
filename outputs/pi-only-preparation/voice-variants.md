@@ -16,3 +16,11 @@ Both generators read the selected voice from the copied catalog. The notice must
 Install the verified bank, catalog, bank manifest and fallback notice together while holding the weather lock. Preserve the current runtime sources and a private backup of the previous voice. Validate fresh assembly and encoding on the hotspot, then obtain receiver confirmation. After installation the hotspot fetches current data, assembles prerecorded phrases and encodes/transmits locally. Runtime operation requires no laptop or neural synthesis.
 
 Changing the voice does not establish a fix for the documented intermittent RF failure. Raw deployment configurations and receiver identifiers remain private.
+
+## Baya deployment validation
+
+The Baya bank was completed and installed on November 14, 2026, with rate 1.0 and pitch 1.0. All 1,604 phrase files passed text/audio hash, format, duration and level checks. The bank contains 84.68 minutes of prerecorded audio. The voice-only ZIP is 73,240,835 bytes with SHA-256 `004680ea621290f84e7f86cf91b10ae61d448c07c0316087bb4d57a3a8d9a8eb`.
+
+The hotspot verified the archive and every installed phrase, prepared a fresh four-part report and ran the actual playback codec twice with all relay requests stubbed. Both passes produced identical raw, AMBE and decoded artifacts. The staged bank replaced the active bank under the weather lock. Current runtime sources were copied from the live installation, and the previous complete voice/runtime directory was preserved privately for rollback. The existing timer was restored and the root filesystem returned to read-only mode.
+
+The operator explicitly postponed the audible RF audition. No additional live test was started. Receiver audibility and the preferred voice sound remain unverified for this deployment.
