@@ -11,6 +11,7 @@ Read `CODEX-HANDOFF.md` before preparing or deploying this service.
 - Distinguish software delivery from audible radio reception. Intermittent loss of audio remains unresolved.
 - Do not regenerate the phrase bank to translate documentation. Text and audio hashes must remain aligned.
 - Record deployment results and outstanding checks in English.
+- Commit completed source and documentation changes in logical steps before reporting the work finished. Use English commit messages and verify Git status. Push when the task's existing authorization includes GitHub updates. Keep private evidence and live settings outside the public repository.
 - Keep all operator IDs, callsigns, Wi-Fi profiles, private network addresses, and live radio configuration out of public source and documentation. Use private `site.json`; only `config/site.example.json` may be committed.
 - Missing `radio_id` must disable packet generation and playback. Tests must use synthetic IDs.
 - Never include private backups or old Git histories in a transfer archive.
