@@ -41,6 +41,19 @@ class MaintenanceTests(unittest.TestCase):
             self.run_maintenance(weather=lambda:True,timeout=10)
         self.assertFalse(self.restarts)
 
+    def test_starting_relay_socket_is_waited_for_before_restart(self):
+        def status():
+            if self.now<5:raise ConnectionRefusedError('relay starting')
+            return {'busy':False,'priority_active':False}
+        self.run_maintenance(status=status)
+        self.assertEqual(self.restarts,[5.])
+
+    def test_permanently_unavailable_relay_never_restarts_host(self):
+        def status():raise ConnectionRefusedError('relay unavailable')
+        with self.assertRaisesRegex(RuntimeError,'no restart performed'):
+            self.run_maintenance(status=status,timeout=10)
+        self.assertFalse(self.restarts)
+
     def test_restart_failure_releases_lock_without_retry_storm(self):
         def failed():self.restarts.append(self.now);raise RuntimeError('restart failed')
         with self.assertRaisesRegex(RuntimeError,'restart failed'):self.run_maintenance(restart=failed)
@@ -48,11 +61,11 @@ class MaintenanceTests(unittest.TestCase):
         with self.path.open('r+') as other:fcntl.flock(other,fcntl.LOCK_EX|fcntl.LOCK_NB)
 
     def test_old_login_does_not_satisfy_readiness(self):
-        path=self.root/'host.log';path.write_text('Logged into the master successfully\n');watch=LoginWatch(lambda:path)
+        path=self.root/'host.log';path.write_text('DMR, Logged into the master successfully\n');watch=LoginWatch(lambda:path)
         self.assertFalse(watch.seen())
         def sleep(seconds):
             self.sleep(seconds)
-            with path.open('a') as stream:stream.write('Logged into the master successfully\n')
+            with path.open('a') as stream:stream.write('DMR, Logged into the master successfully\n')
         wait_ready(watch,status=lambda:{'connected':True,'host':['127.0.0.1',1]},sleep=sleep,clock=lambda:self.now,timeout=10)
         self.assertEqual(self.now,2.)
 

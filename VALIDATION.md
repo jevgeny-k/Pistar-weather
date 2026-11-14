@@ -35,3 +35,7 @@ Recorder correction: a real root-only loopback integration test exposed that ETH
 ## November 10 six-hour maintenance workaround
 
 The operator explicitly requested this workaround after another silent report without a new host error. Seven Linux tests passed for shared-lock exclusion, PID/reservation/capture deferral, bounded failure and fresh-login readiness. A live test showed weather queued with no PID during maintenance and starting only after maintenance readiness. See `outputs/pi-only-preparation/modem-maintenance.md`. This is not an RF fault detector or a root-cause fix.
+
+## Faster maintenance readiness
+
+All 55 Linux relay/framing/configuration/maintenance tests passed for the updated relay/helper pair. A full live stop/start/new-login check measured 22.392819 seconds using journal monotonic timestamps; the operator confirmed audible speech afterward. Readiness now uses a root-only local confirmation after a new DMR login instead of waiting for the first periodic heartbeat. It does not skip native authentication or change the weather exclusion/six-hour schedule. See `outputs/pi-only-preparation/faster-maintenance-readiness.md` for trust boundaries, the live startup-race correction and fallback behavior.

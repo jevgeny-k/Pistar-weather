@@ -13,12 +13,18 @@ DIAGNOSTICS=Path('/run/pistar-weather-diagnostics/state.json')
 
 def command(*args):return subprocess.check_output(args,text=True,timeout=60).strip()
 
-def relay_status():
+def relay_request(message):
     with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as client:
         client.settimeout(3);client.connect(str(CONTROL))
-        client.sendall(b'{"op":"status"}');data=json.loads(client.recv(4096))
+        client.sendall(json.dumps(message).encode());return json.loads(client.recv(4096))
+
+def relay_status():
+    data=relay_request({'op':'status'})
     if not data.get('ok'):raise RuntimeError('Relay status unavailable')
     return data
+
+def confirm_login(host):
+    return bool(relay_request({'op':'confirm_host_login','host':host}).get('ok'))
 
 def weather_running():
     # Queued systemd jobs have no PID; waiting for those would deadlock After=.
@@ -48,20 +54,28 @@ class LoginWatch:
             for _ in range(4096):
                 line=source.readline(4096)
                 if not line:break
-                if 'Logged into the master successfully' in line:self.found=True
+                if 'DMR, Logged into the master successfully' in line:self.found=True
             self.position=source.tell()
         return self.found
 
 def restart_host():
+    # Stop first so a late login from the old process cannot count as fresh.
+    command('systemctl','stop','mmdvmhost.service')
     login=LoginWatch()
-    command('systemctl','restart','mmdvmhost.service')
+    command('systemctl','start','mmdvmhost.service')
     return login
 
-def wait_ready(login,status=relay_status,sleep=time.sleep,clock=time.monotonic,timeout=90):
-    deadline=clock()+timeout
+def wait_ready(login,status=relay_status,sleep=time.sleep,clock=time.monotonic,timeout=90,confirm=confirm_login):
+    deadline=clock()+timeout;confirmation_attempted=False
     while clock()<deadline:
         state=status()
-        if login.seen() and state.get('connected') and state.get('host'):return
+        if login.seen() and state.get('host'):
+            if state.get('connected'):return
+            # The host's new log entry follows its final successful protocol ACK.
+            # Confirm locally instead of waiting another ten seconds for a pong.
+            if not confirmation_attempted:
+                confirmation_attempted=True
+                if confirm(state['host']):return
         sleep(2)
     raise RuntimeError('Host restarted but a fresh master login was not confirmed')
 
@@ -76,14 +90,15 @@ def maintain(lock_path=LOCK,status=relay_status,weather=weather_running,diagnost
                 try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);acquired=True
                 except BlockingIOError:pass
                 if acquired:
-                    state=status()
-                    if not weather() and not diagnostics() and not state.get('busy') and not state.get('priority_active'):
+                    try:state=status()
+                    except (OSError,ValueError,RuntimeError):state=None
+                    if state is not None and not weather() and not diagnostics() and not state.get('busy') and not state.get('priority_active'):
                         log('MODEM_MAINTENANCE_RESTARTING_HOST',flush=True)
                         login=restart();ready(login)
                         log('MODEM_MAINTENANCE_READY',flush=True)
                         return
                 if not announced:
-                    log('MODEM_MAINTENANCE_DEFERRED_WEATHER_OR_CAPTURE',flush=True);announced=True
+                    log('MODEM_MAINTENANCE_DEFERRED_WEATHER_CAPTURE_OR_RELAY',flush=True);announced=True
             finally:
                 if acquired:fcntl.flock(lock,fcntl.LOCK_UN)
             sleep(5)

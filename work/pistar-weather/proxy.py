@@ -13,6 +13,7 @@ from pathlib import Path
 import selectors
 import secrets
 import socket
+import struct
 import time
 
 from site_settings import configured_radio_id, load_site, require_radio_id
@@ -38,6 +39,13 @@ def validate_packets(raw):
     if len(streams) != 1 or packets[0][15] != 0x61 or packets[-1][15] != 0x62:
         raise ValueError('Missing LC header or terminator')
     return packets
+
+
+def require_root_peer(client):
+    # Only the local root maintenance process may confirm host-log evidence.
+    credentials=client.getsockopt(socket.SOL_SOCKET,socket.SO_PEERCRED,struct.calcsize('3i'))
+    _,uid,_=struct.unpack('3i',credentials)
+    if uid!=0:raise PermissionError('Root maintenance confirmation required')
 
 
 class Relay:
@@ -128,6 +136,12 @@ class Relay:
         try:
             request = json.loads(client.recv(4096))
             self.expire_priority(time.monotonic())
+            if request.get('op') == 'confirm_host_login':
+                require_root_peer(client)
+                if not self.host or request.get('host') != list(self.host):raise ValueError('Host peer changed')
+                self.connected = True
+                LOG.info('Fresh master login confirmed by root maintenance')
+                self.reply(client, {'ok': True}); return
             if request.get('op') == 'begin_bulletin':
                 if not self.weather_priority: raise ValueError('Weather priority is disabled')
                 if self.reservation and not self.reservation.get('released'): raise ValueError('Bulletin already reserved')
