@@ -1,5 +1,6 @@
 """Generate only the seed bank, then audition the Pi-portable assembly."""
 from pathlib import Path
+import argparse
 import hashlib
 import html
 import json
@@ -7,39 +8,49 @@ import math
 import sys
 import wave
 from array import array
-from catalog import ROOT,OUT,PROFILE
+from catalog import ROOT,OUT
 sys.path.insert(0,str(ROOT/'work/pistar-weather'))
 from silero_compare import MODEL,download
 from assemble import assemble
 
 
 def main():
-    catalog=json.loads((OUT/'catalog.json').read_text(encoding='utf-8'))
-    (OUT/'bank').mkdir(exist_ok=True)
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--output',type=Path,default=OUT)
+    parser.add_argument('--all',action='store_true')
+    args=parser.parse_args()
+    out=args.output
+    catalog=json.loads((out/'catalog.json').read_text(encoding='utf-8'))
+    profile=catalog['profile']
+    if profile.get('speaker') not in ('baya','kseniya','xenia','aidar','eugene'):
+        raise ValueError('Unsupported speaker')
+    if not .75<=profile['rate']<=1.25 or not .75<=profile['pitch']<=1.25:
+        raise ValueError('Unsupported voice profile')
+    (out/'bank').mkdir(exist_ok=True)
     download()
     import torch
     import torch.nn.functional as F
     torch.set_num_threads(2)
     model=torch.package.PackageImporter(str(MODEL)).load_pickle('tts_models','model');model.to(torch.device('cpu'))
-    package=model.packages[model.speaker_to_package[PROFILE['speaker']]]
-    package.rate2value['fast']=PROFILE['rate'];package.pitch2value['high']=PROFILE['pitch']
-    manifest_path=OUT/'bank-manifest.json'
+    package=model.packages[model.speaker_to_package[profile['speaker']]]
+    package.rate2value['fast']=profile['rate'];package.pitch2value['high']=profile['pitch']
+    manifest_path=out/'bank-manifest.json'
     previous=json.loads(manifest_path.read_text(encoding='utf-8')) if manifest_path.exists() else {}
-    records=previous.get('generated',{}) if previous.get('profile')==PROFILE else {}
-    keys=list(catalog['entries']) if '--all' in sys.argv else catalog['pilot_seed_ids']
+    records=previous.get('generated',{}) if previous.get('profile')==profile else {}
+    keys=list(catalog['entries']) if args.all else catalog['pilot_seed_ids']
     def checkpoint():
-        manifest=dict(schema=1,profile=PROFILE,generated=records,total_catalogue=len(catalog['entries']),
+        manifest=dict(schema=1,profile=profile,generated=records,total_catalogue=len(catalog['entries']),
                       status='complete' if len(records)==len(catalog['entries']) else 'partial; resumable')
         temporary=manifest_path.with_suffix('.tmp')
         temporary.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
         temporary.replace(manifest_path)
     for key in keys:
         e=catalog['entries'][key]
-        existing=records.get(key);path=OUT/e['wav']
+        existing=records.get(key);path=out/e['wav']
         if existing and existing['text_sha256']==e['text_sha256'] and path.exists() and hashlib.sha256(path.read_bytes()).hexdigest()==existing['sha256']:
             continue
         ssml='<speak><prosody rate="fast" pitch="high">'+html.escape(e['text'])+'</prosody></speak>'
-        audio=model.apply_tts(ssml_text=ssml,speaker=PROFILE['speaker'],sample_rate=48000,
+        audio=model.apply_tts(ssml_text=ssml,speaker=profile['speaker'],sample_rate=48000,
                              put_accent=True,put_yo=True).detach().cpu().float()
         if not torch.isfinite(audio).all() or float(audio.abs().max())<.001:raise ValueError('Bad synthesis '+key)
         # Band-limit BEFORE integer downsampling. Smooth transitions avoid a
@@ -60,7 +71,7 @@ def main():
         edge=min(40,audio.numel()//2)
         audio[:edge]*=torch.linspace(0,1,edge);audio[-edge:]*=torch.linspace(1,0,edge)
         pcm=array('h',(audio*32767).round().clamp(-32767,32767).to(torch.int16).tolist())
-        path=OUT/e['wav']
+        path=out/e['wav']
         with wave.open(str(path),'wb') as w:
             w.setnchannels(1);w.setsampwidth(2);w.setframerate(8000);w.writeframes(pcm.tobytes())
         records[key]=dict(sha256=hashlib.sha256(path.read_bytes()).hexdigest(),text_sha256=e['text_sha256'],
@@ -68,7 +79,7 @@ def main():
         checkpoint()
         print('Prepared',key,round(len(pcm)/8000,2),'seconds',flush=True)
     checkpoint()
-    seconds=assemble(OUT,OUT/'pilot-plan.json',OUT/'pilot-assembled.wav')
+    seconds=assemble(out,out/'pilot-plan.json',out/'pilot-assembled.wav')
     print('SEED_READY',len(records),'phrases; pilot',round(seconds,1),'seconds',flush=True)
 
 
