@@ -11,6 +11,20 @@ sys.path.insert(0,'/opt/pistar-weather')
 from weather import BASE,STATE,build_call,request
 from readiness import wait_for_ready
 
+def encode_audio(source,raw,ambe,decoded):
+    for level in (-3,-6,-9):
+        subprocess.run(['sox','-D',str(source),'-t','raw','-r','8000','-e','signed-integer','-b','16','-c','1','-L',str(raw),'gain','-6','highpass','100','lowpass','3400','gain','-n',str(level),'pad','0.5','0.5'],check=True)
+        subprocess.run([str(BASE/'encode'),str(raw),str(ambe)],check=True)
+        subprocess.run([str(BASE/'encode'),'-d',str(ambe),str(decoded)],check=True)
+        samples=array('h');samples.frombytes(decoded.read_bytes())
+        if not 8000<len(samples)<41*8000:raise ValueError('Bad encoded audio duration')
+        peak=max(abs(v) for v in samples)
+        if peak<=1000:raise ValueError('Encoded audio is too quiet')
+        if peak<32767:return
+        if level!=-9:print('CODEC_HEADROOM_RETRY',level,'dB decoded peak',peak,flush=True)
+    raise ValueError('Encoded audio clips after bounded headroom retries')
+
+
 def play(directory,cached=False):
     directory=Path(directory)
     profile_path=Path(__file__).with_name('playback-profile.json')
@@ -42,11 +56,7 @@ def play(directory,cached=False):
             audio_source=wav.with_suffix('.playback.wav')
             subprocess.run(['sox','-D',str(wav),str(audio_source),*effects],check=True)
         raw=wav.with_suffix('.raw');ambe=wav.with_suffix('.ambe72');decoded=wav.with_suffix('.decoded.raw')
-        subprocess.run(['sox','-D',str(audio_source),'-t','raw','-r','8000','-e','signed-integer','-b','16','-c','1','-L',str(raw),'gain','-6','highpass','100','lowpass','3400','gain','-n','-3','pad','0.5','0.5'],check=True)
-        subprocess.run([str(BASE/'encode'),str(raw),str(ambe)],check=True)
-        subprocess.run([str(BASE/'encode'),'-d',str(ambe),str(decoded)],check=True)
-        samples=array('h');samples.frombytes(decoded.read_bytes())
-        if not 8000<len(samples)<41*8000 or not 1000<max(abs(v) for v in samples)<32767:raise ValueError('Bad encoded audio')
+        encode_audio(audio_source,raw,ambe,decoded)
         packet=STATE/('autonomous-'+str(i)+'.dmr55');packet.write_bytes(build_call(ambe.read_bytes()));packets.append(packet)
     token=None
     if request({'op':'status'}).get('weather_priority'):

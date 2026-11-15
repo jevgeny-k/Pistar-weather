@@ -40,3 +40,9 @@ The operator heard Baya and requested a more energetic delivery. After two radio
 Copy `config/baya-playback.json` beside the installed `play.py` as `playback-profile.json`. The playback code validates the profile and transforms the checked source WAV before the existing codec pipeline. The source cache stores the assembled audio, so both fresh and fallback playback apply the profile once per transmission. The fallback notice receives the same treatment. A bank without a playback profile uses the existing processing path.
 
 Staged verification ran as the weather service user. A fresh four-part report passed two actual native codec runs with relay requests stubbed, producing identical raw, AMBE and decoded results. The reviewed player and selected profile were installed together under the weather lock, with a private backup and explicit readable file modes. The root filesystem returned to read-only mode and the quarter-hour timer was restored.
+
+## Bounded codec headroom recovery
+
+A subsequent scheduled Baya report hit the decoded-audio peak limit. The second and fourth parts of a reproduced report reached a decoded peak of 32767 with the existing -3 dB normalization. Encoding those parts at -6 dB produced peaks of 24578 and 20341 and passed the original audio guard.
+
+The player now retries a saturated part at normalization targets -6 and -9 dB after the initial -3 dB attempt. Each attempt uses the same checked source audio and runs both encoding and decoding. Duration checks, the minimum usable level and rejection of saturated decoded output remain enforced. Persistent saturation fails after three attempts. Quiet or invalid-duration audio fails immediately. Four focused regression tests cover these paths.
