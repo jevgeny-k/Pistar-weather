@@ -17,6 +17,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('directory',type=Path)
     parser.add_argument('--now',action='store_true')
+    parser.add_argument('--use-playback-profile',action='store_true')
     args=parser.parse_args()
     source=args.directory
     manifest=json.loads((source/'manifest.json').read_text(encoding='utf-8'))
@@ -30,6 +31,8 @@ def main():
             # An isolated player keeps the selected Baya effects out of the comparison.
             player_path=out/'audition_player.py'
             shutil.copy2(live/'play.py',player_path)
+            if args.use_playback_profile:
+                shutil.copy2(live/'playback-profile.json',out/'playback-profile.json')
             spec=importlib.util.spec_from_file_location('audition_player',player_path)
             player=importlib.util.module_from_spec(spec)
             spec.loader.exec_module(player)
