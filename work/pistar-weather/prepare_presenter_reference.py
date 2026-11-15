@@ -9,13 +9,17 @@ def main():
     parser.add_argument('--start',type=float,default=40)
     parser.add_argument('--duration',type=float,default=60)
     parser.add_argument('--asr-model',default='base')
+    parser.add_argument('--directory',type=Path)
+    parser.add_argument('--audio',type=Path)
+    parser.add_argument('--source-url')
     args=parser.parse_args()
     import librosa
     import soundfile as sf
     from faster_whisper import WhisperModel
     root=Path(__file__).resolve().parents[2]
-    base=root/'work/presenter-reference'
-    audio,sr=sf.read(base/'polyakova.wav',dtype='float32')
+    base=args.directory or root/'work/presenter-reference'
+    base.mkdir(parents=True,exist_ok=True)
+    audio,sr=sf.read(args.audio or base/'polyakova.wav',dtype='float32')
     sample=librosa.resample(audio[int(args.start*sr):int((args.start+args.duration)*sr)],orig_sr=sr,target_sr=16000)
     model=WhisperModel(args.asr_model,device='cpu',compute_type='int8',cpu_threads=2,
                        download_root=str(root/'work/asr-cache'))
@@ -33,7 +37,7 @@ def main():
     if not 3<end-start<14:raise ValueError('Reference excerpt outside conditioning range')
     text=''.join(w['word'] for w in selected).strip()
     sf.write(base/'conditioning.wav',audio[int(start*sr):int(end*sr)],sr,subtype='PCM_16')
-    result=dict(analysis_offset_seconds=args.start,segments=rows,words=words,
+    result=dict(analysis_offset_seconds=args.start,source_url=args.source_url,segments=rows,words=words,
                 words_per_minute=len(words)*60/(len(sample)/16000),conditioning_start=start,conditioning_end=end,
                 conditioning_text=text,conditioning_word_count=len(selected),
                 conditioning_mean_probability=sum(w['probability'] for w in selected)/len(selected))

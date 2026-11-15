@@ -1,5 +1,6 @@
 """Render a clearly labelled synthetic forecast conditioned on an attributed reference."""
 import gc
+import argparse
 import hashlib
 import json
 import os
@@ -18,10 +19,21 @@ STRESSED_TEXT=('+Это пр+обный прогн+оз для Р+иги. Сег
 
 
 def main():
-    reference=ROOT/'work/presenter-reference'
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--reference',type=Path,default=ROOT/'work/presenter-reference')
+    parser.add_argument('--output',type=Path,default=ROOT/'outputs/f5-presenter')
+    parser.add_argument('--int8',action='store_true')
+    args=parser.parse_args()
+    reference=args.reference
     reference_info=json.loads((reference/'transcription.json').read_text(encoding='utf-8'))
-    if reference_info.get('analysis_offset_seconds')!=40:
-        raise ValueError('The broadcast speech excerpt must replace the introductory advertisement')
+    screening=json.loads((reference/'screening.json').read_text(encoding='utf-8'))
+    reference_hash=hashlib.sha256((reference/'conditioning.wav').read_bytes()).hexdigest()
+    if screening['audio_sha256']!=reference_hash or screening['start']!=0:
+        raise ValueError('Screening must match the exact conditioning file')
+    if screening['music_mean']>.02 or screening['music_max']>.10 or screening['speech_mean']<.5:
+        raise ValueError('Reference failed the speech/music screening gate')
+    source_url=reference_info.get('source_url')
+    if not source_url:raise ValueError('An attributed reference source is required')
     import imageio_ffmpeg
     from pydub import AudioSegment
     AudioSegment.converter=imageio_ffmpeg.get_ffmpeg_exe()
@@ -36,10 +48,20 @@ def main():
     engine=F5TTS(model='F5TTS_v1_Base',ckpt_file=str(checkpoint),
                  vocab_file=str(model_dir/'vocab.txt'),device='cpu',
                  hf_cache_dir=str(ROOT/'work/hf-cache'))
-    print('F5_QUANTIZING_LINEAR_LAYERS_FOR_CPU',flush=True)
-    engine.ema_model=torch.ao.quantization.quantize_dynamic(
-        engine.ema_model,{torch.nn.Linear},dtype=torch.qint8,inplace=True)
+    if args.int8:
+        print('F5_QUANTIZING_LINEAR_LAYERS_FOR_CPU',flush=True)
+        engine.ema_model=torch.ao.quantization.quantize_dynamic(
+            engine.ema_model,{torch.nn.Linear},dtype=torch.qint8,inplace=True)
     gc.collect()
+    forward=engine.ema_model.transformer.forward
+    steps=0
+    def report_forward(*positional,**keywords):
+        nonlocal steps
+        result=forward(*positional,**keywords)
+        steps+=1
+        if steps%4==0:print('F5_FLOW_STEPS_COMPLETED',steps,flush=True)
+        return result
+    engine.ema_model.transformer.forward=report_forward
     ref_text=(reference/'conditioning.txt').read_text(encoding='utf-8').strip()
     started=time.monotonic()
     print('F5_RENDERING_SYNTHETIC_FORECAST',flush=True)
@@ -52,8 +74,8 @@ def main():
         raise ValueError('Invalid F5 output')
     peak=float(np.max(np.abs(audio)))
     if peak<.001:raise ValueError('Silent F5 output')
-    out=ROOT/'outputs/f5-presenter'
-    out.mkdir(exist_ok=True)
+    out=args.output
+    out.mkdir(parents=True,exist_ok=True)
     path=out/'synthetic-presenter.wav'
     sf.write(path,audio*(.70/peak),sr,subtype='PCM_16')
     record=dict(file=path.name,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -61,9 +83,9 @@ def main():
     manifest=dict(model='Misha24-10/F5-TTS_RUSSIAN F5TTS_v1_Base_v2',
         model_revision='ea166adeae4c80ec5ee423a671e2bdb83906cf84',
         checkpoint_sha256='f11e788c8d2d86b8d6e3e2e7a12c583932d2494b015b544793c1924360b474d3',
-        reference_url='https://www.youtube.com/watch?v=BHBP-j-eW1Q',
+        reference_url=source_url,
         reference_excerpt_sha256=hashlib.sha256((reference/'conditioning.wav').read_bytes()).hexdigest(),
-        synthetic=True,cpu_linear_quantization='int8',nfe_steps=32,seed=2026,
+        synthetic=True,cpu_linear_quantization='int8' if args.int8 else 'none',nfe_steps=32,seed=2026,
         clips=[record],generation_seconds=round(time.monotonic()-started,2))
     (out/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
     print('F5_PRESENTER_READY',round(record['seconds'],2),'seconds',flush=True)
