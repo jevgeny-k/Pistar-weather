@@ -13,6 +13,14 @@ from readiness import wait_for_ready
 
 def play(directory,cached=False):
     directory=Path(directory)
+    profile_path=Path(__file__).with_name('playback-profile.json')
+    effects=[]
+    if profile_path.exists():
+        profile=json.loads(profile_path.read_text(encoding='utf-8'))
+        tempo=float(profile['tempo']);pitch=float(profile['pitch_cents'])
+        if not 1<=tempo<=1.5 or not -300<=pitch<=300:
+            raise ValueError('Playback profile outside supported range')
+        effects=['tempo',str(tempo),'pitch',str(pitch)]
     manifest=json.loads((directory/'manifest.json').read_text())
     stamp=dt.datetime.fromisoformat(manifest['generated_utc'])
     if cached:
@@ -29,8 +37,12 @@ def play(directory,cached=False):
         if Path(name).name!=name or not name.endswith('.wav'):raise ValueError('Invalid audio path')
         wav=directory/name
         if hashlib.sha256(wav.read_bytes()).hexdigest()!=clip['sha256']:raise ValueError('Damaged audio')
+        audio_source=wav
+        if effects:
+            audio_source=wav.with_suffix('.playback.wav')
+            subprocess.run(['sox','-D',str(wav),str(audio_source),*effects],check=True)
         raw=wav.with_suffix('.raw');ambe=wav.with_suffix('.ambe72');decoded=wav.with_suffix('.decoded.raw')
-        subprocess.run(['sox','-D',str(wav),'-t','raw','-r','8000','-e','signed-integer','-b','16','-c','1','-L',str(raw),'gain','-6','highpass','100','lowpass','3400','gain','-n','-3','pad','0.5','0.5'],check=True)
+        subprocess.run(['sox','-D',str(audio_source),'-t','raw','-r','8000','-e','signed-integer','-b','16','-c','1','-L',str(raw),'gain','-6','highpass','100','lowpass','3400','gain','-n','-3','pad','0.5','0.5'],check=True)
         subprocess.run([str(BASE/'encode'),str(raw),str(ambe)],check=True)
         subprocess.run([str(BASE/'encode'),'-d',str(ambe),str(decoded)],check=True)
         samples=array('h');samples.frombytes(decoded.read_bytes())

@@ -32,3 +32,11 @@ The resumed audition on November 15 exposed a deployment error. A restrictive ro
 Set public runtime/bank directories to mode 0755 and their Python, JSON, WAV and operational documentation files to mode 0644. Apply these modes only inside the intended voice/runtime directory. Preserve the permissions of private credentials and backups. The private installer now sets these modes explicitly and runs staged preparation and codec checks as the configured service user before activation.
 
 After correction, preparation through the installed wrapper as the service user succeeded. A real systemd service run subsequently reached the first RF call. Complete report delivery and receiver feedback must be checked independently of that first-call observation.
+
+## Selected energetic playback
+
+The operator heard Baya and requested a more energetic delivery. After two radio auditions, the operator selected tempo 1.20 and pitch +150 cents, approximately a 9% pitch increase. The synthesis bank retains its original voice profile. The selected playback transformation runs locally through SoX on the hotspot.
+
+Copy `config/baya-playback.json` beside the installed `play.py` as `playback-profile.json`. The playback code validates the profile and transforms the checked source WAV before the existing codec pipeline. The source cache stores the assembled audio, so both fresh and fallback playback apply the profile once per transmission. The fallback notice receives the same treatment. A bank without a playback profile uses the existing processing path.
+
+Staged verification ran as the weather service user. A fresh four-part report passed two actual native codec runs with relay requests stubbed, producing identical raw, AMBE and decoded results. The reviewed player and selected profile were installed together under the weather lock, with a private backup and explicit readable file modes. The root filesystem returned to read-only mode and the quarter-hour timer was restored.
