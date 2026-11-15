@@ -9,6 +9,7 @@ Read `CODEX-HANDOFF.md` before preparing or deploying this service.
 - Keep credentials on the hotspot. Do not commit passwords, API keys, full live configurations, or private backups.
 - Preserve hotspot identity, frequencies, modem configuration, Wi-Fi, and credentials unless the task explicitly requires changes.
 - Distinguish software delivery from audible radio reception. Intermittent loss of audio remains unresolved.
+- Validate installed runtime and bank access as the systemd service user. Root-only preparation or codec checks do not verify deployment permissions.
 - Do not regenerate the phrase bank to translate documentation. Text and audio hashes must remain aligned.
 - Record deployment results and outstanding checks in English.
 - Commit completed source and documentation changes in logical steps before reporting the work finished. Use English commit messages and verify Git status. Push when the task's existing authorization includes GitHub updates. Keep private evidence and live settings outside the public repository.

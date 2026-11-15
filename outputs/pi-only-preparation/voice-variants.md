@@ -24,3 +24,11 @@ The Baya bank was completed and installed on November 14, 2026, with rate 1.0 an
 The hotspot verified the archive and every installed phrase, prepared a fresh four-part report and ran the actual playback codec twice with all relay requests stubbed. Both passes produced identical raw, AMBE and decoded artifacts. The staged bank replaced the active bank under the weather lock. Current runtime sources were copied from the live installation, and the previous complete voice/runtime directory was preserved privately for rollback. The existing timer was restored and the root filesystem returned to read-only mode.
 
 The operator explicitly postponed the audible RF audition. No additional live test was started. Receiver audibility and the preferred voice sound remain unverified for this deployment.
+
+## Service-user permissions correction
+
+The resumed audition on November 15 exposed a deployment error. A restrictive root umask left the extracted bank and top-level directory inaccessible to the weather service user. The earlier root-only preparation and codec checks passed, but scheduled service starts failed with permission denied before playback.
+
+Set public runtime/bank directories to mode 0755 and their Python, JSON, WAV and operational documentation files to mode 0644. Apply these modes only inside the intended voice/runtime directory. Preserve the permissions of private credentials and backups. The private installer now sets these modes explicitly and runs staged preparation and codec checks as the configured service user before activation.
+
+After correction, preparation through the installed wrapper as the service user succeeded. A real systemd service run subsequently reached the first RF call. Complete report delivery and receiver feedback must be checked independently of that first-call observation.
