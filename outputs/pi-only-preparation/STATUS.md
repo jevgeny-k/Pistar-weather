@@ -2,6 +2,8 @@
 
 This is a historical record from November 7-8, 2026, not a live status report. Recheck the device before changing it.
 
+Schedule update, November 17, 2026: the current weather timer runs at the start of every hour in Europe/Riga, replacing the historical quarter-hour schedule below. The daily cat reminders remain at 21:00, 21:30 and 22:00 Riga time. See `work/pistar-weather/CAT-REMINDER.md` and the current timer source for later behavior.
+
 The complete bank contains 1,604 phrases, totaling 67.4 minutes; the original installation ZIP is about 58.5 MB. It was installed under `/opt/pistar-weather/autonomous-v1`. Xenia voice: +8% rate, +15% pitch. The Pi downloads five Open-Meteo/NOAA sources and assembles speech without Torch or a laptop.
 
 `pistar-weather-autonomous.timer` was enabled for fresh bulletins every quarter hour. `pistar-weather-frozen.timer` was stopped and disabled; frozen parts remain as a backup under `/opt/pistar-weather/frozen-replay-v1`. Missed runs are not caught up. Concurrent executions are locked out and ordinary radio traffic has priority.

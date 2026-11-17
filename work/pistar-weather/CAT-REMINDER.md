@@ -6,7 +6,7 @@ The reminder says: `Не забудь покормить котиков, кот�
 
 `pistar-cat-reminder.timer` triggers daily at **21:00, 21:30 and 22:00 Europe/Riga**. The timezone is explicit because the hotspot system timezone differs. Systemd handles Riga seasonal clock changes. `Persistent=false` prevents missed reminders from being replayed when the device returns after a shutdown. The enabled timer survives reboot.
 
-The oneshot service runs as the weather service user, uses the existing private relay/site configuration and shares the weather/maintenance lock. It is ordered after the weather and protected maintenance services. At simultaneous quarter-hour triggers, weather retains priority; the reminder follows when weather finishes. Actual audio can therefore start later than the scheduled time. The reminder cannot interrupt a bulletin or overlap a modem restart.
+The oneshot service runs as the weather service user, uses the existing private relay/site configuration and shares the weather/maintenance lock. It is ordered after the weather and protected maintenance services. At simultaneous weather/reminder triggers, weather retains priority; the reminder follows when weather finishes. Actual audio can therefore start later than the scheduled time. The reminder cannot interrupt a bulletin or overlap a modem restart. Weather was changed to hourly on November 17, 2026; the three reminder times remain unchanged.
 
 ## Preparation and installation
 

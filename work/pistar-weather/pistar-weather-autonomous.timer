@@ -1,0 +1,12 @@
+[Unit]
+Description=Fresh weather bulletin every hour
+
+[Timer]
+OnCalendar=*-*-* *:00:00 Europe/Riga
+AccuracySec=1s
+RandomizedDelaySec=0
+Persistent=false
+Unit=pistar-weather-autonomous.service
+
+[Install]
+WantedBy=timers.target

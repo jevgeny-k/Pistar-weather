@@ -37,7 +37,7 @@ Copy `config/site.example.json` to a private file and fill in `radio_id` and `up
 
 For local laptop execution, set `PISTAR_SITE_CONFIG` to the private file's absolute path. The ignored `config/site.json` is a convenient local filename, but is not auto-discovered. The default runtime path is `/etc/pistar-weather/site.json`. The transfer builder uses an explicit allowlist and includes only `site.example.json`.
 
-The architecture still uses private calls on TS1, a relay at `127.0.0.1:62039`, and fresh bulletins every quarter hour without catch-up. Preserve the actual target's radio/network settings. An earlier TXHang trial is documented as an unresolved diagnostic experiment, not an installation requirement.
+The architecture still uses private calls on TS1 and a relay at `127.0.0.1:62039`. Since November 17, 2026, fresh weather bulletins are scheduled at the start of every hour with explicit `Europe/Riga` calendar time and no catch-up. The authoritative timer source is `work/pistar-weather/pistar-weather-autonomous.timer`; the package schedule copy matches it. Preserve the actual target's radio/network settings. An earlier TXHang trial is documented as an unresolved diagnostic experiment, not an installation requirement.
 
 ## Deployment map
 
