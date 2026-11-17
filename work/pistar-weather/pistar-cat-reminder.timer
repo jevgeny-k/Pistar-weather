@@ -1,0 +1,14 @@
+[Unit]
+Description=Cat feeding reminders at Riga evening times
+
+[Timer]
+OnCalendar=*-*-* 21:00:00 Europe/Riga
+OnCalendar=*-*-* 21:30:00 Europe/Riga
+OnCalendar=*-*-* 22:00:00 Europe/Riga
+AccuracySec=1s
+RandomizedDelaySec=0
+Persistent=false
+Unit=pistar-cat-reminder.service
+
+[Install]
+WantedBy=timers.target
